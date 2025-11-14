@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centered Image</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;  /* centers horizontally */
+      align-items: center;      /* centers vertically */
+      background-color: #f0f0f0; /* optional */
+    }
+
+    img {
+      max-width: 80%;  /* prevents overflow */
+      max-height: 80%; /* keeps image within screen */
+    }
+
+    /* Access Denied Page Styles */
+    #access-denied {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #1a1a1a;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, sans-serif;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 99999;
+    }
+
+    #access-denied h1 {
+      font-size: 3rem;
+      color: #ff4444;
+      margin-bottom: 1rem;
+    }
+
+    #access-denied p {
+      font-size: 1.25rem;
+      color: #cccccc;
+    }
+
+    #access-denied.show {
+      display: flex;
+    }
+  </style>
+</head>
+<body>
+  <img src="bar.jpg" alt="Centered Image">
+  
+  <!-- Access Denied Overlay -->
+  <div id="access-denied">
+    <div>
+      <h1>Access Denied</h1>
+      <p>Developer tools are not allowed on this website.</p>
+      <p style="font-size: 0.875rem; color: #888888; margin-top: 2rem;">This page will close automatically...</p>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // Access Denied Page HTML
+      const accessDeniedDiv = document.getElementById('access-denied');
+
+      // Function to show access denied page
+      function showAccessDenied() {
+        try {
+          // Hide original content
+          document.querySelector('body > img').style.display = 'none';
+          
+          // Show access denied overlay
+          accessDeniedDiv.classList.add('show');
+          
+          // Close window after 3 seconds (optional - you can remove this if you want)
+          setTimeout(function() {
+            // Uncomment the line below if you want to close the window
+            // window.close();
+            
+            // Or redirect to a specific page
+            // window.location.href = 'about:blank';
+          }, 3000);
+        } catch (error) {
+          console.warn('Error showing access denied:', error);
+        }
+      }
+
+      // Window resize detection for DevTools (checks every ~1000ms)
+      function checkDevTools() {
+        try {
+          const widthDiff = window.outerWidth - window.innerWidth;
+          const heightDiff = window.outerHeight - window.innerHeight;
+
+          // If window size difference exceeds threshold (likely DevTools open)
+          // Threshold of 160px accounts for browser UI but detects DevTools panel
+          if (widthDiff > 160 || heightDiff > 160) {
+            showAccessDenied();
+            // Stop checking once detected
+            clearInterval(devToolsCheckInterval);
+          }
+        } catch (error) {
+          // Silently fail - don't crash the page
+          console.warn('DevTools detection error:', error);
+        }
+      }
+
+      // Start periodic DevTools detection
+      const devToolsCheckInterval = setInterval(checkDevTools, 1000);
+
+      // Keyboard shortcut blocking
+      function handleKeyDown(e) {
+        try {
+          // Block F12
+          if (e.key === 'F12' || e.keyCode === 123) {
+            e.preventDefault();
+            e.stopPropagation();
+            showAccessDenied();
+            clearInterval(devToolsCheckInterval);
+            return false;
+          }
+
+          // Block Ctrl+Shift+I (DevTools)
+          if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.keyCode === 73)) {
+            e.preventDefault();
+            e.stopPropagation();
+            showAccessDenied();
+            clearInterval(devToolsCheckInterval);
+            return false;
+          }
+
+          // Block Ctrl+Shift+J (Console)
+          if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j' || e.keyCode === 74)) {
+            e.preventDefault();
+            e.stopPropagation();
+            showAccessDenied();
+            clearInterval(devToolsCheckInterval);
+            return false;
+          }
+
+          // Block Ctrl+Shift+C (Inspect Element)
+          if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c' || e.keyCode === 67)) {
+            e.preventDefault();
+            e.stopPropagation();
+            showAccessDenied();
+            clearInterval(devToolsCheckInterval);
+            return false;
+          }
+
+          // Block Ctrl+U (View Source)
+          if (e.ctrlKey && (e.key === 'U' || e.key === 'u' || e.keyCode === 85)) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+
+          // Block Ctrl+S (Save Page)
+          if (e.ctrlKey && (e.key === 'S' || e.key === 's' || e.keyCode === 83)) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+
+          // Block Ctrl+P (Print - can expose source)
+          if (e.ctrlKey && (e.key === 'P' || e.key === 'p' || e.keyCode === 80)) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }
+        } catch (error) {
+          // Silently fail - don't crash the page
+          console.warn('Keyboard shortcut blocking error:', error);
+        }
+      }
+
+      // Context menu blocking (right-click)
+      function handleContextMenu(e) {
+        try {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        } catch (error) {
+          // Silently fail - don't crash the page
+          console.warn('Context menu blocking error:', error);
+        }
+      }
+
+      // Block text selection (optional - makes it harder to inspect)
+      function handleSelectStart(e) {
+        try {
+          e.preventDefault();
+          return false;
+        } catch (error) {
+          console.warn('Selection blocking error:', error);
+        }
+      }
+
+      // Block drag and drop (optional)
+      function handleDragStart(e) {
+        try {
+          e.preventDefault();
+          return false;
+        } catch (error) {
+          console.warn('Drag blocking error:', error);
+        }
+      }
+
+      // Add event listeners
+      window.addEventListener('keydown', handleKeyDown, true);
+      document.addEventListener('contextmenu', handleContextMenu, true);
+      document.addEventListener('selectstart', handleSelectStart, true);
+      document.addEventListener('dragstart', handleDragStart, true);
+
+      // Detect if DevTools is already open on page load
+      setTimeout(function() {
+        checkDevTools();
+      }, 1000);
+
+      // Cleanup function
+      window.addEventListener('beforeunload', function() {
+        clearInterval(devToolsCheckInterval);
+        window.removeEventListener('keydown', handleKeyDown, true);
+        document.removeEventListener('contextmenu', handleContextMenu, true);
+        document.removeEventListener('selectstart', handleSelectStart, true);
+        document.removeEventListener('dragstart', handleDragStart, true);
+      });
+
+      // Additional protection: Detect console usage
+      (function() {
+        let devtools = {open: false};
+        const element = new Image();
+        Object.defineProperty(element, 'id', {
+          get: function() {
+            devtools.open = true;
+            showAccessDenied();
+            clearInterval(devToolsCheckInterval);
+          }
+        });
+        setInterval(function() {
+          devtools.open = false;
+          console.log(element);
+          if (devtools.open) {
+            showAccessDenied();
+            clearInterval(devToolsCheckInterval);
+          }
+        }, 1000);
+      })();
+
+    })();
+  </script>
+</body>
+</html>
